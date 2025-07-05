@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/backend/bin/Debug/net8.0
+/backend/.vs/backend/config
+/backend/.vs/backend/CopilotIndices/0.2.1772.47927
+/backend/.vs/backend/v17/DocumentLayout.backup.json
+/backend/.vs/backend/v17/DocumentLayout.json
+/backend/.vs/backend/v17/.suo
+/backend/.vs/backend/FileContentIndex/cbbc3f1f-241b-4ca6-ae37-bd0ffcc20cdb.vsidx
+/backend/.vs/backend/FileContentIndex/91534f5b-a3dc-4758-9803-f7c4b481b2b2.vsidx
+/backend/.vs/backend/DesignTimeBuild/.dtbcache.v2

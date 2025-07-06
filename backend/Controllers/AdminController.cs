@@ -119,7 +119,7 @@ namespace backend.Controllers
             // Calculate revenue (mock data for now)
             var revenue = await _context.Events
                 .Where(e => e.TicketPrice.HasValue)
-                .SumAsync(e => e.TicketPrice.Value * e.EventRegistrations.Count());
+                .SumAsync(e => e.TicketPrice.Value * e.Registrations.Count());
 
             // Popular categories
             var popularCategories = await _context.Categories

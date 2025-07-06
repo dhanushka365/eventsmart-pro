@@ -41,17 +41,59 @@ namespace backend.Controllers
             _logger = logger;
         }
 
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            try
+            {
+                return Ok(new { 
+                    message = "Auth controller is working", 
+                    timestamp = DateTime.UtcNow,
+                    environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Test failed", error = ex.Message });
+            }
+        }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
             try
             {
+                _logger.LogInformation("Registration attempt for email: {Email}", model.Email);
+
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for registration: {Errors}", 
+                        string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
                     return BadRequest(ModelState);
+                }
+
+                // Test database connection first
+                try
+                {
+                    var canConnect = await _context.Database.CanConnectAsync();
+                    if (!canConnect)
+                    {
+                        _logger.LogError("Cannot connect to database during registration");
+                        return StatusCode(500, new { message = "Database connection failed" });
+                    }
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database connection test failed during registration");
+                    return StatusCode(500, new { message = "Database connection error", error = dbEx.Message });
+                }
 
                 var existingUser = await _userManager.FindByEmailAsync(model.Email);
                 if (existingUser != null)
+                {
+                    _logger.LogWarning("Registration attempt with existing email: {Email}", model.Email);
                     return BadRequest(new { message = "User with this email already exists" });
+                }
 
                 var user = new User
                 {
@@ -63,22 +105,31 @@ namespace backend.Controllers
                     EmailConfirmed = true // For demo purposes, in production you'd send confirmation email
                 };
 
+                _logger.LogInformation("Creating user with UserManager for email: {Email}", model.Email);
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (!result.Succeeded)
+                {
+                    _logger.LogError("Failed to create user: {Errors}", 
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
                     return BadRequest(new { message = "Failed to create user", errors = result.Errors });
+                }
 
+                _logger.LogInformation("User created successfully, logging login attempt");
                 await LogLoginAttempt(user.Id, true, null);
 
-                // Send welcome email
+                // Send welcome email (optional, don't fail registration if this fails)
                 try
                 {
                     await _emailService.SendWelcomeEmailAsync(user.Email, user.FirstName);
+                    _logger.LogInformation("Welcome email sent successfully");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"Failed to send welcome email: {ex.Message}");
+                    _logger.LogWarning(ex, "Failed to send welcome email to {Email}", user.Email);
+                    // Don't fail registration because of email issues
                 }
 
+                _logger.LogInformation("Generating tokens for user: {Email}", user.Email);
                 var tokens = _tokenService.GenerateTokens(user);
                 
                 // Save refresh token
@@ -86,12 +137,14 @@ namespace backend.Controllers
                 user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
                 await _userManager.UpdateAsync(user);
 
+                _logger.LogInformation("Registration completed successfully for user: {Email}", user.Email);
                 return Ok(tokens);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Registration error: {ex.Message}");
-                return StatusCode(500, new { message = "Internal server error" });
+                _logger.LogError(ex, "Registration error for email: {Email}. Error: {Message}", 
+                    model?.Email ?? "unknown", ex.Message);
+                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
             }
         }
 

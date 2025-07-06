@@ -13,9 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Database configuration
+// Database configuration - Using SQLite for testing
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite("Data Source=eventsmartpro.db"));
 
 // Identity configuration
 builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -88,16 +88,40 @@ builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection(
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddHttpClient<IAIService, AIService>();
+builder.Services.AddScoped<IDataSeedService, DataSeedService>();
 
 // CORS configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+        policy.WithOrigins(
+                "http://localhost:4200", 
+                "https://localhost:4200",
+                "http://localhost:3000",
+                "https://localhost:3000"
+              )
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
+    });
+    
+    // For development only - more permissive policy
+    options.AddPolicy("DevelopmentCors", policy =>
+    {
+        policy.SetIsOriginAllowed(origin => 
+        {
+            if (string.IsNullOrWhiteSpace(origin)) return false;
+            
+            // Allow localhost on any port for development
+            return origin.StartsWith("http://localhost:") || 
+                   origin.StartsWith("https://localhost:");
+        })
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 });
 
@@ -153,7 +177,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAngularApp");
+// Use development CORS policy in development, strict policy in production
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("DevelopmentCors");
+}
+else
+{
+    app.UseCors("AllowAngularApp");
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -165,31 +197,23 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+    var seedService = scope.ServiceProvider.GetRequiredService<IDataSeedService>();
     
     try
     {
-        // Ensure database is created
-        await context.Database.EnsureCreatedAsync();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Starting database initialization...");
+
+        // Create database and tables
+        logger.LogInformation("Creating database schema...");
+        var created = await context.Database.EnsureCreatedAsync();
+        logger.LogInformation("Database created: {Created}", created);
+
+        // Seed initial data
+        logger.LogInformation("Seeding initial data...");
+        await seedService.SeedInitialDataAsync();
         
-        // Seed admin user if it doesn't exist
-        var adminEmail = "admin@eventsmart.com";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        
-        if (adminUser == null)
-        {
-            adminUser = new User
-            {
-                UserName = adminEmail,
-                Email = adminEmail,
-                FirstName = "System",
-                LastName = "Administrator",
-                Role = UserRole.Admin,
-                EmailConfirmed = true,
-                IsActive = true
-            };
-            
-            await userManager.CreateAsync(adminUser, "Admin@123");
-        }
+        logger.LogInformation("Database initialization completed successfully");
     }
     catch (Exception ex)
     {

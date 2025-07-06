@@ -116,17 +116,25 @@ namespace backend.Data
             {
                 entity.HasKey(e => e.Id);
 
+                entity.Property(e => e.EventId)
+                    .IsRequired();
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
                 entity.Property(e => e.AmountPaid)
                     .HasColumnType("decimal(18,2)");
 
                 entity.Property(e => e.RegistrationDate)
                     .HasDefaultValueSql("GETUTCDATE()");
 
+                // Explicitly configure the Event relationship
                 entity.HasOne(e => e.Event)
                     .WithMany(ev => ev.Registrations)
                     .HasForeignKey(e => e.EventId)
                     .OnDelete(DeleteBehavior.Cascade);
 
+                // Explicitly configure the User relationship
                 entity.HasOne(e => e.User)
                     .WithMany()
                     .HasForeignKey(e => e.UserId)

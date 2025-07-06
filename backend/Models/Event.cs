@@ -65,9 +65,6 @@ namespace backend.Models
         // Navigation Properties
         public virtual ICollection<EventRegistration> Registrations { get; set; } = new List<EventRegistration>();
         
-        // Alternative property name for backward compatibility
-        public virtual ICollection<EventRegistration> EventRegistrations => Registrations;
-        
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 

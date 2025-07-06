@@ -18,11 +18,16 @@ namespace backend.Models
 
         public string? ProfileImageUrl { get; set; }
         
+        // Alternative property name for backward compatibility
+        public string? ProfilePictureUrl => ProfileImageUrl;
+        
         public bool IsActive { get; set; } = true;
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        public DateTime? LastLoginDate { get; set; }
         
         public string? RefreshToken { get; set; }
         

@@ -97,17 +97,4 @@ namespace backend.DTOs
         public bool IsUserRegistered { get; set; }
         public RegistrationStatus? UserRegistrationStatus { get; set; }
     }
-
-    public class VenueDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
-        public string State { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
-        public int Capacity { get; set; }
-        public decimal? Latitude { get; set; }
-        public decimal? Longitude { get; set; }
-    }
 }

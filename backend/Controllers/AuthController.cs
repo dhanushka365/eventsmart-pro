@@ -127,9 +127,10 @@ namespace backend.Controllers
 
                 var tokens = _tokenService.GenerateTokens(user);
                 
-                // Save refresh token
+                // Save refresh token and update last login date
                 user.RefreshToken = tokens.RefreshToken;
                 user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+                user.LastLoginDate = DateTime.UtcNow;
                 await _userManager.UpdateAsync(user);
 
                 return Ok(tokens);

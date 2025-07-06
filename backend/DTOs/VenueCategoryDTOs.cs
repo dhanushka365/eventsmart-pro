@@ -12,6 +12,24 @@ namespace backend.DTOs
         public int EventCount { get; set; }
     }
 
+    public class VenueDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+        public int Capacity { get; set; }
+        public string? Description { get; set; }
+        public string? Amenities { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? ContactPhone { get; set; }
+        public string? ContactEmail { get; set; }
+    }
+
     public class CreateCategoryDto
     {
         [Required]

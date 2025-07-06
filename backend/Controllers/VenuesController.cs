@@ -32,8 +32,13 @@ namespace backend.Controllers
                     State = v.State,
                     Country = v.Country,
                     Capacity = v.Capacity,
+                    Description = v.Description,
+                    Amenities = v.Amenities,
                     Latitude = v.Latitude,
-                    Longitude = v.Longitude
+                    Longitude = v.Longitude,
+                    ImageUrl = v.ImageUrl,
+                    ContactPhone = v.ContactPhone,
+                    ContactEmail = v.ContactEmail
                 })
                 .ToListAsync();
 
@@ -54,8 +59,13 @@ namespace backend.Controllers
                     State = v.State,
                     Country = v.Country,
                     Capacity = v.Capacity,
+                    Description = v.Description,
+                    Amenities = v.Amenities,
                     Latitude = v.Latitude,
-                    Longitude = v.Longitude
+                    Longitude = v.Longitude,
+                    ImageUrl = v.ImageUrl,
+                    ContactPhone = v.ContactPhone,
+                    ContactEmail = v.ContactEmail
                 })
                 .FirstOrDefaultAsync();
 
@@ -99,8 +109,13 @@ namespace backend.Controllers
                 State = venue.State,
                 Country = venue.Country,
                 Capacity = venue.Capacity,
+                Description = venue.Description,
+                Amenities = venue.Amenities,
                 Latitude = venue.Latitude,
-                Longitude = venue.Longitude
+                Longitude = venue.Longitude,
+                ImageUrl = venue.ImageUrl,
+                ContactPhone = venue.ContactPhone,
+                ContactEmail = venue.ContactEmail
             };
 
             return CreatedAtAction(nameof(GetVenue), new { id = venue.Id }, venueDto);

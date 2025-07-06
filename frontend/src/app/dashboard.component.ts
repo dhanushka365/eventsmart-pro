@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService, User, UserRole } from './services/auth.service';
+import { EventService, Event } from './services/event.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="dashboard-container">
       <div class="dashboard-header">
@@ -73,14 +74,14 @@ import { AuthService, User, UserRole } from './services/auth.service';
               <div class="action-card">
                 <h3>System Settings</h3>
                 <p>Configure system-wide settings and preferences</p>
-                <button class="btn btn-primary">
+                <button class="btn btn-primary" (click)="goToSettings()">
                   Settings
                 </button>
               </div>
               <div class="action-card">
                 <h3>Analytics</h3>
                 <p>View detailed analytics and reports</p>
-                <button class="btn btn-primary">
+                <button class="btn btn-primary" (click)="goToAnalytics()">
                   View Analytics
                 </button>
               </div>
@@ -94,14 +95,14 @@ import { AuthService, User, UserRole } from './services/auth.service';
               <div class="action-card">
                 <h3>Create Event</h3>
                 <p>Plan and create new events</p>
-                <button class="btn btn-primary">
+                <button class="btn btn-primary" routerLink="/events/create">
                   Create Event
                 </button>
               </div>
               <div class="action-card">
                 <h3>My Events</h3>
                 <p>Manage your existing events</p>
-                <button class="btn btn-primary">
+                <button class="btn btn-primary" (click)="goToMyEvents()">
                   View Events
                 </button>
               </div>
@@ -150,22 +151,22 @@ import { AuthService, User, UserRole } from './services/auth.service';
               <div class="action-card">
                 <h3>Browse Events</h3>
                 <p>Discover exciting events happening near you</p>
-                <button class="btn btn-primary">
+                <button class="btn btn-primary" routerLink="/events">
                   Browse Events
                 </button>
               </div>
               <div class="action-card">
-                <h3>My Tickets</h3>
-                <p>View and manage your event tickets</p>
-                <button class="btn btn-primary">
-                  My Tickets
+                <h3>My Events</h3>
+                <p>View and manage your registered events</p>
+                <button class="btn btn-primary" (click)="goToMyEvents()">
+                  My Events
                 </button>
               </div>
               <div class="action-card">
-                <h3>Favorites</h3>
-                <p>View your favorite events and venues</p>
-                <button class="btn btn-primary">
-                  My Favorites
+                <h3>Recommendations</h3>
+                <p>AI-powered event recommendations for you</p>
+                <button class="btn btn-primary" (click)="goToRecommendations()">
+                  Get Recommendations
                 </button>
               </div>
             </div>
@@ -439,14 +440,31 @@ import { AuthService, User, UserRole } from './services/auth.service';
 })
 export class DashboardComponent implements OnInit {
   user: User | null = null;
+  recentEvents: Event[] = [];
+  statsLoading = true;
 
   constructor(
     private authService: AuthService,
+    private eventService: EventService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
+    this.loadRecentEvents();
+  }
+
+  loadRecentEvents(): void {
+    this.eventService.getEvents().subscribe({
+      next: (events) => {
+        this.recentEvents = events.slice(0, 5); // Get first 5 events
+        this.statsLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading events:', error);
+        this.statsLoading = false;
+      }
+    });
   }
 
   goToProfile(): void {
@@ -455,6 +473,22 @@ export class DashboardComponent implements OnInit {
 
   goToUserManagement(): void {
     this.router.navigate(['/admin/users']);
+  }
+
+  goToSettings(): void {
+    this.router.navigate(['/admin/settings']);
+  }
+
+  goToAnalytics(): void {
+    this.router.navigate(['/admin/analytics']);
+  }
+
+  goToMyEvents(): void {
+    this.router.navigate(['/my-events']);
+  }
+
+  goToRecommendations(): void {
+    this.router.navigate(['/recommendations']);
   }
 
   logout(): void {

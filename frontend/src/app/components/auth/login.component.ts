@@ -1,10 +1,11 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { GoogleAuthService } from '../../services/google-auth.service';
+import { LayoutService } from '../../services/layout.service';
 
 @Component({
   selector: 'app-login',
@@ -243,7 +244,7 @@ import { GoogleAuthService } from '../../services/google-auth.service';
     }
   `]
 })
-export class LoginComponent implements OnInit, AfterViewInit {
+export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('googleButton') googleButton!: ElementRef;
   
   loginForm: FormGroup;
@@ -254,7 +255,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
     private formBuilder: FormBuilder,
     private authService: AuthService,
     private googleAuthService: GoogleAuthService,
-    private router: Router
+    private router: Router,
+    private layoutService: LayoutService
   ) {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
@@ -263,6 +265,9 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    // Hide header and footer for auth pages
+    this.layoutService.showAuthLayout();
+    
     // Redirect if already authenticated
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/dashboard']);
@@ -281,8 +286,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.googleAuthService.renderButton(this.googleButton.nativeElement, {
           theme: 'outline',
           size: 'large',
-          text: 'signin_with',
-          width: '100%'
+          text: 'signin_with'
+          // Removed width: '100%' as it's not supported by Google Sign-In
         });
       } catch (error) {
         console.error('Failed to render Google button:', error);
@@ -304,7 +309,20 @@ export class LoginComponent implements OnInit, AfterViewInit {
         },
         error: (error) => {
           this.loading = false;
-          this.errorMessage = error.message || 'Login failed. Please try again.';
+          console.error('Login error:', error);
+          
+          // Handle different types of errors
+          if (error.status === 0) {
+            this.errorMessage = 'Unable to connect to the server. Please check if the backend is running.';
+          } else if (error.status === 400) {
+            this.errorMessage = error.error?.message || 'Invalid login credentials.';
+          } else if (error.status === 401) {
+            this.errorMessage = 'Invalid email or password. Please try again.';
+          } else if (error.status === 500) {
+            this.errorMessage = 'Server error occurred. Please try again later.';
+          } else {
+            this.errorMessage = error.message || 'Login failed. Please try again.';
+          }
         }
       });
     }
@@ -326,5 +344,10 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.loading = false;
         this.errorMessage = error.message || 'Google sign-in failed. Please try again.';
       });
+  }
+
+  ngOnDestroy(): void {
+    // Restore main layout when leaving login page
+    this.layoutService.showMainLayout();
   }
 }

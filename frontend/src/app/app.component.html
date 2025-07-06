@@ -1,1 +1,10 @@
-<router-outlet></router-outlet>
+<div class="app-container" 
+     *ngIf="{ header: showHeader$ | async, footer: showFooter$ | async } as layout">
+  <app-header *ngIf="layout.header"></app-header>
+  <main class="main-content" 
+        [class.no-header]="!layout.header" 
+        [class.no-footer]="!layout.footer">
+    <router-outlet></router-outlet>
+  </main>
+  <app-footer *ngIf="layout.footer"></app-footer>
+</div>

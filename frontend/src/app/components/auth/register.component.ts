@@ -371,8 +371,24 @@ export class RegisterComponent implements OnInit {
         },
         error: (error) => {
           this.loading = false;
-          this.errorMessage = error.message || 'Registration failed. Please try again.';
+          console.error('Registration error:', error);
+          
+          // Handle different types of errors
+          if (error.status === 0) {
+            this.errorMessage = 'Unable to connect to the server. Please check if the backend is running.';
+          } else if (error.status === 400) {
+            this.errorMessage = error.error?.message || 'Invalid registration data. Please check your inputs.';
+          } else if (error.status === 500) {
+            this.errorMessage = 'Server error occurred. Please try again later.';
+          } else {
+            this.errorMessage = error.message || 'Registration failed. Please try again.';
+          }
         }
+      });
+    } else {
+      // Mark all fields as touched to show validation errors
+      Object.keys(this.registerForm.controls).forEach(key => {
+        this.registerForm.get(key)?.markAsTouched();
       });
     }
   }

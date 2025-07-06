@@ -5,11 +5,18 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class LayoutService {
-  private showHeaderSubject = new BehaviorSubject<boolean>(true);
-  private showFooterSubject = new BehaviorSubject<boolean>(true);
+  private showHeaderSubject = new BehaviorSubject<boolean>(false);
+  private showFooterSubject = new BehaviorSubject<boolean>(false);
 
   public showHeader$ = this.showHeaderSubject.asObservable();
   public showFooter$ = this.showFooterSubject.asObservable();
+
+  constructor() {
+    // Initialize with default layout after a brief delay to avoid change detection issues
+    setTimeout(() => {
+      this.showMainLayout();
+    }, 0);
+  }
 
   setHeaderVisibility(show: boolean) {
     this.showHeaderSubject.next(show);

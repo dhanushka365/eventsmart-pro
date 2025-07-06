@@ -320,13 +320,15 @@ export class EventCreateComponent implements OnInit {
     this.eventService.createEvent(eventRequest).subscribe({
       next: (event) => {
         this.creating = false;
-        alert('Event created successfully!');
-        this.router.navigate(['/events', event.id]);
+        this.showSuccessNotification();
+        setTimeout(() => {
+          this.router.navigate(['/events', event.id]);
+        }, 2000);
       },
       error: (error) => {
         this.creating = false;
         console.error('Error creating event:', error);
-        alert('Failed to create event. Please try again.');
+        this.showErrorNotification();
       }
     });
   }
@@ -335,5 +337,42 @@ export class EventCreateComponent implements OnInit {
     Object.keys(this.eventForm.controls).forEach(key => {
       this.eventForm.get(key)?.markAsTouched();
     });
+  }
+
+  showSuccessNotification() {
+    // Create a temporary success notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 transform transition-all duration-300';
+    notification.innerHTML = `
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        Event created successfully! Redirecting...
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+
+  showErrorNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 transform transition-all duration-300';
+    notification.innerHTML = `
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        Failed to create event. Please try again.
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.remove();
+    }, 5000);
   }
 }

@@ -22,6 +22,12 @@ export class GoogleAuthService {
       return;
     }
 
+    // Check if client ID is configured
+    if (!this.clientId || this.clientId.includes('your-google-client-id')) {
+      console.warn('Google Client ID not configured. Google Sign-In will be disabled.');
+      return;
+    }
+
     return new Promise((resolve, reject) => {
       if (typeof window.google !== 'undefined') {
         this.initializeGoogleSignIn(resolve, reject);
@@ -113,6 +119,19 @@ export class GoogleAuthService {
   renderButton(element: HTMLElement, options?: any): void {
     if (!this.isInitialized) {
       console.error('Google Sign-In not initialized');
+      // Hide the element or show a placeholder
+      if (element) {
+        element.style.display = 'none';
+      }
+      return;
+    }
+
+    // Check if client ID is properly configured
+    if (!this.clientId || this.clientId.includes('your-google-client-id')) {
+      console.warn('Google Client ID not configured. Hiding Google Sign-In button.');
+      if (element) {
+        element.style.display = 'none';
+      }
       return;
     }
 
